@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alzheimer's Risk Predictor</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f7faf7;
+      min-height: 100vh;
+      color: #1a2e1a;
+    }
+
+    .header {
+      background: #1b5e20;
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-icon {
+      width: 48px; height: 48px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .header-icon svg { width: 28px; height: 28px; }
+
+    .header-text h1 { font-size: 20px; font-weight: 700; color: #ffffff; }
+    .header-text p  { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 3px; }
+
+    .container {
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1.5px solid #c8e6c9;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 2px 12px rgba(27,94,32,0.07);
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1b5e20;
+      margin-bottom: 6px;
+    }
+
+    .card-sub {
+      font-size: 12px;
+      color: #6a9a6a;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .field { margin-bottom: 20px; }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #2e7d32;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 5px;
+    }
+
+    .field-hint {
+      font-size: 11px;
+      color: #9e9e9e;
+      margin-bottom: 6px;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #c8e6c9;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      color: #1a2e1a;
+      background: #f9fdf9;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    input[type="number"]:focus {
+      border-color: #2e7d32;
+      background: #ffffff;
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 10px;
+      border: 1.5px solid #c8e6c9;
+      border-radius: 10px;
+      background: #f9fdf9;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      color: #4a7a4a;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .toggle-btn.active {
+      background: #1b5e20;
+      border-color: #1b5e20;
+      color: #ffffff;
+    }
+
+    .toggle-btn:hover:not(.active) {
+      border-color: #2e7d32;
+      background: #e8f5e9;
+    }
+
+    button.predict-btn {
+      width: 100%;
+      padding: 14px;
+      background: #1b5e20;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    button.predict-btn:hover  { background: #2e7d32; }
+    button.predict-btn:active { transform: scale(0.98); }
+
+    /* Result card */
+    .result-card {
+      background: #ffffff;
+      border: 1.5px solid #c8e6c9;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 2px 12px rgba(27,94,32,0.07);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .result-placeholder {
+      text-align: center;
+      padding: 40px 20px;
+      color: #9e9e9e;
+    }
+
+    .result-placeholder svg {
+      width: 48px; height: 48px;
+      margin: 0 auto 12px;
+      opacity: 0.3;
+    }
+
+    .result-placeholder p { font-size: 14px; }
+
+    .result-content { display: none; }
+    .result-content.show { display: block; }
+
+    .diagnosis-box {
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .diagnosis-box.positive {
+      background: #fce4ec;
+      border: 2px solid #e57373;
+    }
+
+    .diagnosis-box.negative {
+      background: #e8f5e9;
+      border: 2px solid #66bb6a;
+    }
+
+    .diagnosis-icon {
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+
+    .diagnosis-text {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .diagnosis-box.positive .diagnosis-text { color: #c62828; }
+    .diagnosis-box.negative .diagnosis-text { color: #1b5e20; }
+
+    .diagnosis-sub { font-size: 13px; color: #757575; }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .metric-box {
+      background: #f9fdf9;
+      border: 1.5px solid #c8e6c9;
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .metric-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #6a9a6a;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1b5e20;
+    }
+
+    .metric-unit { font-size: 12px; color: #9e9e9e; }
+
+    /* Risk bar */
+    .risk-bar-wrap { margin-bottom: 16px; }
+
+    .risk-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #6a9a6a;
+      margin-bottom: 6px;
+    }
+
+    .risk-bar-track {
+      height: 10px;
+      background: #e8f5e9;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .risk-bar-fill {
+      height: 100%;
+      border-radius: 5px;
+      transition: width 0.6s ease;
+    }
+
+    /* Feature summary */
+    .feature-summary {
+      background: #f9fdf9;
+      border: 1.5px solid #c8e6c9;
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .feature-summary-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #2e7d32;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+
+    .feature-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 4px 0;
+      border-bottom: 0.5px solid #e8f5e9;
+      color: #4a4a4a;
+    }
+
+    .feature-row:last-child { border-bottom: none; }
+    .feature-row span:last-child { font-weight: 600; color: #1b5e20; }
+
+    /* Disclaimer */
+    .disclaimer {
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 11px;
+      color: #7a6000;
+      line-height: 1.6;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 700px) {
+      .container { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">
+    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="12" stroke="white" stroke-width="1.5"/>
+      <path d="M9 14c0-2.8 2.2-5 5-5s5 2.2 5 5-2.2 5-5 5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="14" cy="14" r="2" fill="white"/>
+      <path d="M14 7v2M14 19v2M7 14h2M19 14h2" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="header-text">
+    <h1>Alzheimer's Risk Predictor</h1>
+    <p>Random Forest · Consensus High Signal (5 features) · AUC 0.9455 · Recall 0.9211</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Input Panel -->
+  <div class="card">
+    <div class="card-title">Clinical Assessment</div>
+    <p class="card-sub">Enter the patient's cognitive and behavioral assessment scores below.</p>
+
+    <div class="field">
+      <label>Functional Assessment Score</label>
+      <p class="field-hint">Overall functional ability (0–10, lower = more impaired)</p>
+      <input type="number" id="functional_assessment" min="0" max="10" step="0.01" value="7.5">
+    </div>
+
+    <div class="field">
+      <label>ADL Score (Activities of Daily Living)</label>
+      <p class="field-hint">Ability to perform daily tasks (0–10, lower = more impaired)</p>
+      <input type="number" id="adl" min="0" max="10" step="0.01" value="7.0">
+    </div>
+
+    <div class="field">
+      <label>MMSE Score (Mini-Mental State Exam)</label>
+      <p class="field-hint">Cognitive function score (0–30, lower = more impaired)</p>
+      <input type="number" id="mmse" min="0" max="30" step="0.1" value="24.0">
+    </div>
+
+    <div class="field">
+      <label>Memory Complaints</label>
+      <p class="field-hint">Does the patient report memory problems?</p>
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="mc-no"  onclick="setToggle('memory_complaints', 0, this)">No</button>
+        <button class="toggle-btn"        id="mc-yes" onclick="setToggle('memory_complaints', 1, this)">Yes</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Behavioral Problems</label>
+      <p class="field-hint">Does the patient exhibit behavioral issues?</p>
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="bp-no"  onclick="setToggle('behavioral_problems', 0, this)">No</button>
+        <button class="toggle-btn"        id="bp-yes" onclick="setToggle('behavioral_problems', 1, this)">Yes</button>
+      </div>
+    </div>
+
+    <button class="predict-btn" onclick="predict()">Assess Risk</button>
+
+    <div class="disclaimer" style="margin-top:16px">
+      This tool is for research and educational purposes only. It is not a substitute for professional medical diagnosis. Always consult a qualified healthcare provider.
+    </div>
+  </div>
+
+  <!-- Result Panel -->
+  <div class="result-card">
+
+    <div class="result-placeholder" id="placeholder">
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="20" stroke="#9e9e9e" stroke-width="1.5"/>
+        <path d="M16 24c0-4.4 3.6-8 8-8s8 3.6 8 8-3.6 8-8 8" stroke="#9e9e9e" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="24" cy="24" r="3" fill="#9e9e9e"/>
+      </svg>
+      <p>Enter assessment values and click<br><strong>Assess Risk</strong> to see results</p>
+    </div>
+
+    <div class="result-content" id="result-content">
+
+      <div class="diagnosis-box" id="diagnosis-box">
+        <div class="diagnosis-icon" id="diagnosis-icon"></div>
+        <div class="diagnosis-text" id="diagnosis-text"></div>
+        <div class="diagnosis-sub"  id="diagnosis-sub"></div>
+      </div>
+
+      <div class="metric-row">
+        <div class="metric-box">
+          <div class="metric-label">AD Probability</div>
+          <div class="metric-value" id="prob-value">—</div>
+          <div class="metric-unit">%</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Risk Level</div>
+          <div class="metric-value" id="risk-value">—</div>
+        </div>
+      </div>
+
+      <div class="risk-bar-wrap">
+        <div class="risk-bar-label">
+          <span>Low Risk</span>
+          <span>High Risk</span>
+        </div>
+        <div class="risk-bar-track">
+          <div class="risk-bar-fill" id="risk-bar" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="feature-summary">
+        <div class="feature-summary-title">Input Summary</div>
+        <div class="feature-row"><span>Functional Assessment</span><span id="sum-fa">—</span></div>
+        <div class="feature-row"><span>ADL Score</span><span id="sum-adl">—</span></div>
+        <div class="feature-row"><span>MMSE Score</span><span id="sum-mmse">—</span></div>
+        <div class="feature-row"><span>Memory Complaints</span><span id="sum-mc">—</span></div>
+        <div class="feature-row"><span>Behavioral Problems</span><span id="sum-bp">—</span></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const toggleValues = {
+    memory_complaints:   0,
+    behavioral_problems: 0,
+  };
+
+  function setToggle(field, value, btn) {
+    toggleValues[field] = value;
+    const group = btn.closest('.toggle-group');
+    group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  async function predict() {
+    const body = {
+      functional_assessment: parseFloat(document.getElementById('functional_assessment').value),
+      adl:                   parseFloat(document.getElementById('adl').value),
+      mmse:                  parseFloat(document.getElementById('mmse').value),
+      memory_complaints:     toggleValues.memory_complaints,
+      behavioral_problems:   toggleValues.behavioral_problems,
+    };
+
+    try {
+      const res  = await fetch('/predict', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(body)
+      });
+      const data = await res.json();
+
+      document.getElementById('placeholder').style.display    = 'none';
+      document.getElementById('result-content').className     = 'result-content show';
+
+      const isPositive = data.prediction === 1;
+      const box        = document.getElementById('diagnosis-box');
+      box.className    = 'diagnosis-box ' + (isPositive ? 'positive' : 'negative');
+
+      document.getElementById('diagnosis-icon').textContent = isPositive ? '⚠️' : '✅';
+      document.getElementById('diagnosis-text').textContent = data.diagnosis;
+      document.getElementById('diagnosis-sub').textContent  =
+        `Confidence: ${data.probability}% probability of Alzheimer's`;
+
+      document.getElementById('prob-value').textContent  = data.probability;
+      document.getElementById('risk-value').textContent  = data.risk_level;
+      document.getElementById('risk-value').style.color  =
+        data.risk_level === 'High' ? '#c62828' :
+        data.risk_level === 'Moderate' ? '#e65100' : '#1b5e20';
+
+      const barColor =
+        data.risk_level === 'High'     ? '#e53935' :
+        data.risk_level === 'Moderate' ? '#fb8c00' : '#43a047';
+
+      const bar = document.getElementById('risk-bar');
+      bar.style.width      = data.probability + '%';
+      bar.style.background = barColor;
+
+      document.getElementById('sum-fa').textContent   = body.functional_assessment;
+      document.getElementById('sum-adl').textContent  = body.adl;
+      document.getElementById('sum-mmse').textContent = body.mmse;
+      document.getElementById('sum-mc').textContent   = body.memory_complaints  ? 'Yes' : 'No';
+      document.getElementById('sum-bp').textContent   = body.behavioral_problems ? 'Yes' : 'No';
+
+    } catch (err) {
+      alert('Prediction failed. Please check that app.py is running.');
+    }
+  }
+</script>
+</body>
+</html>
